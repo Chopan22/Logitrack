@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiTrack - Simulador GPS</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1e1e1e; color: #fff; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px;}
+        #log { margin-top: 20px; background: #000; padding: 15px; border-radius: 5px; height: 300px; overflow-y: auto; font-family: monospace;}
+        .coordenada { color: #00ff00; }
+    </style>
+</head>
+<body>
+
+    <h2>Simulador de Vehículo (LogiTrack)</h2>
+    <button id="btnEnviar">📍 Enviar Ubicación GPS Falsa</button>
+
+    <div id="log">
+        <p>Esperando datos...</p>
+    </div>
+
+    <script>
+        // Nos conectamos a tu backend local
+        const socket = io('http://localhost:3000');
+        const logDiv = document.getElementById('log');
+
+        socket.on('connect', () => {
+            logDiv.innerHTML += `<p style="color: yellow;">Conectado al servidor con ID: ${socket.id}</p>`;
+        });
+
+        // Escuchar cuando el servidor retransmite una ubicación
+        socket.on('nueva_ubicacion', (data) => {
+            logDiv.innerHTML += `<p class="coordenada">📡 Recibido del servidor: Vehículo ${data.vehiculo_id} en [Lat: ${data.lat}, Lng: ${data.lng}]</p>`;
+            // Hacer auto-scroll hacia abajo
+            logDiv.scrollTop = logDiv.scrollHeight;
+        });
+
+        // Botón para simular el envío de coordenadas
+        document.getElementById('btnEnviar').addEventListener('click', () => {
+            // Generar una coordenada aleatoria cerca de Santiago
+            const latFalsa = -33.45694 + (Math.random() * 0.1 - 0.05);
+            const lngFalsa = -70.64827 + (Math.random() * 0.1 - 0.05);
+
+            const payload = {
+                vehiculo_id: 'Camion_01',
+                lat: latFalsa.toFixed(5),
+                lng: lngFalsa.toFixed(5)
+            };
+
+            logDiv.innerHTML += `<p style="color: #00bcd4;">🚀 Enviando: [Lat: ${payload.lat}, Lng: ${payload.lng}]</p>`;
+            
+            // Emitir el evento al backend
+            socket.emit('enviar_ubicacion', payload);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: logitrack_db
+    environment:
+      POSTGRES_USER: logitrack_admin
+      POSTGRES_PASSWORD: superpassword123
+      POSTGRES_DB: logitrack_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

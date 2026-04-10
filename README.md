@@ -3,3 +3,9 @@
 </p>
 
 # Logitrack
+
+-------
+
+<p align="center">
+  <img src="gitflow.png" width="70%" />
+</p>

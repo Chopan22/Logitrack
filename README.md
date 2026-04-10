@@ -25,22 +25,22 @@ Antes de empezar, asegúrate de tener instalado en tu PC:
 
 ### 1. Clonar el repositorio
 Abre tu terminal y ejecuta:
-git clone https://github.com/Chopan22/Logitrack.git
-cd Logitrack
+//git clone https://github.com/Chopan22/Logitrack.git
+//cd Logitrack
 
 ### 2. Levantar la Base de Datos (Docker)
 El motor principal está en la carpeta del backend.
-cd backend
-docker-compose up -d
+//cd backend
+//docker-compose up -d
 
 ### 3. Configurar y encender el Backend
 Sin salir de la carpeta backend, instala las dependencias:
-npm install
+//npm install
 
 Crea un archivo llamado .env en la raíz de la carpeta backend. Copia el contenido que está en el archivo .env.example y pégalo ahí. Recuerda cambiar la contraseña de la base de datos por la que sale en el archivo docker-compose.yml.
 
 Arranca el servidor:
-npm run dev
+//npm run dev
 
 ---
 

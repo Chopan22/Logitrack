@@ -42,7 +42,7 @@ const server = http.createServer(app);
 // Inicializar Socket.io sobre el servidor HTTP
 const io = new Server(server, {
     cors: {
-        origin: "*", // En producción limitaremos esto al dominio de tu frontend
+        origin: "*", // En producción limitaremos esto al dominio del frontend
         methods: ["GET", "POST"]
     }
 });
@@ -61,7 +61,6 @@ io.on('connection', (socket) => {
                 INSERT INTO ubicaciones (vehiculo_id, coordenadas) 
                 VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326))
             `;
-            // Cuidado: PostGIS usa (Longitud, Latitud) en ST_MakePoint
             await db.query(query, [data.vehiculo_id, data.lng, data.lat]);
             
             // 2. Re-transmitir la ubicación a todos los clientes web conectados

@@ -10,9 +10,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use('/api/auth',        require('./routes/auth'));
 app.use('/api/vehiculos',   require('./routes/vehiculos'));
 app.use('/api/conductores', require('./routes/conductores'));
 app.use('/api/rutas',       require('./routes/rutas'));
+app.use('/api/pedidos',     require('./routes/pedidos'));
 
 const server = http.createServer(app);
 

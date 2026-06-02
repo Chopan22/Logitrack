@@ -14,7 +14,7 @@ const testConnection = async () => {
     try {
         const res = await pool.query('SELECT PostGIS_Version();');
         console.log('🟢 Conexión a la Base de Datos exitosa.');
-        console.log('🌍 Versión de PostGIS detectada:', res.rows.postgis_version);
+        console.log('🌍 Versión de PostGIS detectada:', res.rows[0].postgis_version);
     } catch (err) {
         console.error('🔴 Error conectando a la Base de Datos:', err.message);
     }

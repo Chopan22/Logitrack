@@ -14,7 +14,8 @@ App Móvil (GPS) ──→ Backend (Express + Socket.io) ──→ Frontend Web 
 - Backend: Node.js + Express 5
 - Tiempo real: Socket.io
 - Base de datos: PostgreSQL 15 + PostGIS 3.3 (Docker)
-- Gestor de paquetes: pnpm
+- Frontend: Next.js 16 + React 19 + Leaflet
+- Gestor de paquetes: npm (raíz y backend) + pnpm (frontend-web)
 
 ---
 
@@ -58,10 +59,12 @@ git clone https://github.com/Chopan22/Logitrack.git
 cd Logitrack
 ```
 
-### 2. Levantar la base de datos
+### 2. Instalar dependencias
 
 ```bash
-docker compose up -d
+npm install
+cd frontend-web && pnpm install && cd ..
+cd backend && npm install && cd ..
 ```
 
 ### 3. Configurar el backend
@@ -80,24 +83,32 @@ DB_NAME=logitrack_dev
 DB_HOST=localhost
 DB_PORT=5432
 PORT=3000
+JWT_SECRET=cambia_esto_por_una_clave_segura
 ```
 
-### 4. Instalar dependencias y correr migraciones
+### 4. Aplicar migraciones
 
 ```bash
-pnpm install
+cd backend
 node scripts/migrate.js
 ```
 
-### 5. Iniciar el servidor
+> Las migraciones se aplican automáticamente la primera vez que se levanta el stack completo si la base de datos ya está corriendo.
+
+### 5. Levantar el stack completo
+
+Desde la raíz del repositorio:
 
 ```bash
-node index.js
-# o en modo desarrollo:
 npm run dev
 ```
 
-El servidor queda disponible en `http://localhost:3000`.
+Este comando levanta automáticamente:
+1. La base de datos PostgreSQL vía Docker Compose (`predev`)
+2. El backend en `http://localhost:3000`
+3. El frontend en `http://localhost:3001`
+
+Los logs de cada servicio aparecen con prefijo de color (`[backend]` en cyan, `[frontend]` en magenta).
 
 ---
 

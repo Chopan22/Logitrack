@@ -1,50 +1,71 @@
-# Welcome to your Expo app 👋
+# LogiTrack — App Movil del Repartidor (Expo)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App movil construida con **Expo (SDK 54) + Expo Router + TypeScript** para el rol **Repartidor** del sistema LogiTrack. Permite iniciar sesion, gestionar rutas de reparto, enviar la posicion GPS en tiempo real por WebSocket y administrar los pedidos de cada ruta sobre un mapa.
 
-## Get started
+## Que hace
 
-1. Install dependencies
+- **Login** contra `POST /api/auth/login` (JWT guardado con AsyncStorage; la sesion persiste).
+- **Rutas**: lista las rutas en curso e inicia una nueva eligiendo vehiculo y conductor (`/api/rutas`).
+- **Seguimiento**: mapa nativo (`react-native-maps`) con tu posicion en vivo (`expo-location`), envio de coordenadas por Socket.io (`enviar_ubicacion`), lista de pedidos de la ruta, asignacion de pedidos pendientes y marcado de entregas.
+- **Cerrar ruta**: finaliza la ruta y detiene el GPS.
 
-   ```bash
-   npm install
-   ```
+## Estructura
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+app/
+  _layout.tsx              Provider de auth + guardia de sesion
+  index.tsx                Splash / redireccion segun sesion
+  login.tsx                Pantalla de login
+  (repartidor)/
+    _layout.tsx            Stack del area privada
+    rutas.tsx              Rutas en curso + iniciar ruta
+    seguimiento/[id].tsx   Mapa, GPS en vivo y pedidos
+lib/
+  config.ts                Lee la URL del backend (app.json -> extra.apiUrl)
+  api.ts                   Cliente HTTP con JWT
+  socket.ts                Cliente Socket.io
+  auth.tsx                 Contexto de autenticacion (AsyncStorage)
+  types.ts                 Tipos del modelo de datos
+components/
+  ui-kit.tsx               Boton, Input, Card, EstadoBadge
+  mapa-ruta.tsx            Mapa nativo (.web.tsx = sustituto para web)
+constants/ui.ts            Paleta de marca y colores por estado
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Configuracion (IMPORTANTE para Expo Go)
 
-## Learn more
+Expo Go corre en tu celular, por lo que `localhost` apunta al telefono, **no** a tu PC. Debes usar la **IP de tu PC en la red local**.
 
-To learn more about developing your project with Expo, look at the following resources:
+1. Averigua tu IP:
+   - Windows: `ipconfig` (busca "Direccion IPv4", ej. `192.168.1.100`)
+   - macOS/Linux: `ifconfig` o `ip addr`
+2. Edita `app.json` y coloca esa IP con el puerto del backend (3000):
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```json
+"extra": {
+  "apiUrl": "http://192.168.1.100:3000"
+}
+```
 
-## Join the community
+3. Tu PC y tu celular deben estar en la **misma red WiFi**, y el backend debe escuchar en `0.0.0.0` (Express lo hace por defecto).
 
-Join our community of developers creating universal apps.
+## Como correr
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+cd app-movil
+npm install
+
+# Alinea las dependencias nativas con tu version de Expo SDK:
+npx expo install react-native-maps expo-location @react-native-async-storage/async-storage
+
+npx expo start
+```
+
+Escanea el QR con la app **Expo Go** (Android/iOS). Asegurate de tener el backend corriendo (`cd backend && npm run dev`) y un usuario creado.
+
+> En **Android**, el mapa funciona en Expo Go sin API key. Para una build propia (EAS) necesitaras una Google Maps API key en `app.json > android.config.googleMaps.apiKey`.
+
+## Notas tecnicas
+
+- Las coordenadas de destino de los pedidos se guardan como geometria PostGIS en el backend; el endpoint `GET /api/pedidos` las devuelve en formato binario, por lo que el mapa muestra la posicion del repartidor (y su recorrido), y los destinos se listan por direccion. Si luego quieres pintar los destinos en el mapa, expone `lat`/`lng` desde el backend con `ST_Y`/`ST_X`.
+- El muestreo GPS usa `Accuracy.Balanced`, `timeInterval: 5000ms` y `distanceInterval: 10m` para equilibrar precision y bateria (uno de los desafios del proyecto).

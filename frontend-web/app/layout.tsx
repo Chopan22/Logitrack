@@ -1,20 +1,35 @@
-import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
-import './globals.css';
-import Providers from '@/components/Providers';
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { AuthProvider } from "@/lib/auth";
 
-const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
-  title: 'LogiTrack — Panel de Administración',
-  description: 'Sistema de monitoreo vehicular en tiempo real',
+  title: "LogiTrack — Panel Admin",
+  description: "Gestion y trazabilidad de ultima milla",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="es" className={geist.variable} style={{ height: '100%' }}>
-      <body style={{ height: '100%' }}>
-        <Providers>{children}</Providers>
+    <html
+      lang="es"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

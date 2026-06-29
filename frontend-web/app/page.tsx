@@ -1,83 +1,76 @@
 'use client';
-import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import NavBar from '@/components/NavBar';
-import { api } from '@/lib/api';
+import { useEffect, useState } from 'react';
+import { Button, Card, Field, Input } from '@/components/ui';
+import { useAuth } from '@/lib/auth';
 
-const MapaTracking = dynamic(() => import('@/components/MapaTracking'), { ssr: false });
-
-interface Ruta {
-  id: number;
-  estado: string;
-  inicio: string;
-  patente: string;
-  vehiculo_alias: string;
-  conductor_nombre: string;
-}
-
-export default function Dashboard() {
-  const { token } = useAuth();
+export default function LoginPage() {
+  const { usuario, cargando, login } = useAuth();
   const router = useRouter();
-  const [rutas, setRutas] = useState<Ruta[]>([]);
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) {
-      router.push('/login');
+    if (!cargando && usuario) router.replace('/admin');
+  }, [cargando, usuario, router]);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || !password) {
+      setError('Ingresa email y contrasena.');
       return;
     }
-    api.rutas.listar('en_curso').then(data => {
-      if (data) setRutas(data);
-    });
-  }, [token, router]);
-
-  if (!token) return null;
+    setError(null);
+    setEnviando(true);
+    try {
+      await login(email.trim().toLowerCase(), password);
+      router.replace('/admin');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo iniciar sesion.');
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <NavBar />
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <aside style={{
-          width: 280,
-          background: '#fff',
-          borderRight: '1px solid #DEDEDE',
-          overflowY: 'auto',
-          padding: '1.25rem',
-          flexShrink: 0,
-        }}>
-          <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '1rem' }}>
-            Rutas activas ({rutas.length})
-          </p>
-          {rutas.length === 0 ? (
-            <p style={{ fontSize: '0.875rem', color: '#9B9B9B' }}>No hay rutas en curso</p>
-          ) : (
-            rutas.map((ruta) => (
-              <div key={ruta.id} style={{
-                padding: '0.75rem',
-                borderRadius: 8,
-                border: '1px solid #DEDEDE',
-                marginBottom: '0.5rem',
-                background: '#FAFAFA',
-              }}>
-                <div style={{ fontWeight: 600, color: '#2D2D2D', fontSize: '0.9375rem' }}>{ruta.patente}</div>
-                {ruta.vehiculo_alias && (
-                  <div style={{ fontSize: '0.8125rem', color: '#6B6B6B' }}>{ruta.vehiculo_alias}</div>
-                )}
-                <div style={{ fontSize: '0.8125rem', color: '#6B6B6B', marginTop: 2 }}>{ruta.conductor_nombre}</div>
-                <div style={{ marginTop: '0.5rem' }}>
-                  <span style={{ fontSize: '0.75rem', background: '#C8603F', color: 'white', padding: '0.125rem 0.5rem', borderRadius: 9999 }}>
-                    en curso
-                  </span>
-                </div>
-              </div>
-            ))
-          )}
-        </aside>
-        <main style={{ flex: 1, position: 'relative' }}>
-          <MapaTracking />
-        </main>
-      </div>
-    </div>
+    <main className="flex flex-1 items-center justify-center p-6">
+      <Card className="w-full max-w-sm">
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl font-extrabold text-sky-700">LogiTrack</h1>
+          <p className="mt-1 text-sm font-medium text-slate-500">Panel de Administracion</p>
+        </div>
+
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <Field label="Email">
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@logitrack.cl"
+              autoComplete="email"
+            />
+          </Field>
+          <Field label="Contrasena">
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="********"
+              autoComplete="current-password"
+            />
+          </Field>
+
+          {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+
+          <Button type="submit" loading={enviando} className="mt-1 w-full">
+            Iniciar sesion
+          </Button>
+        </form>
+      </Card>
+    </main>
   );
 }

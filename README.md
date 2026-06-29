@@ -26,6 +26,7 @@ Plataforma integral (web + móvil) para la logística de entrega de última mill
 - Panel web: Next.js 16, React 19, Tailwind CSS 4, Leaflet
 - Geocodificación: Google Geocoding API (con fallback a Nominatim/OSM)
 - Ruteo por calles: OSRM (servidor público)
+- Gestor de paquetes: npm (raíz y backend) + pnpm (frontend-web)
 
 ---
 
@@ -36,6 +37,7 @@ Logitrack/
 ├── backend/        API REST + WebSocket + migraciones
 ├── app-movil/      App Expo (vistas Repartidor y Cliente)
 ├── frontend-web/   Panel de administración (Next.js)
+├── package.json    Scripts de arranque concurrente (raíz)
 └── docker-compose.yml
 ```
 
@@ -81,15 +83,21 @@ usuarios (auth)        vehiculos     conductores
 
 ## Levantar el entorno local
 
-### 1. Base de datos
+### 1. Clonar e instalar dependencias
 
 ```bash
-docker compose up -d
+git clone https://github.com/Chopan22/Logitrack.git
+cd Logitrack
+npm install
+cd frontend-web && pnpm install && cd ..
+cd backend && npm install && cd ..
 ```
+
+### 2. Base de datos
 
 > El contenedor expone PostgreSQL en el **puerto 5433** del host (`5433:5432`) para no chocar con un PostgreSQL nativo que use el 5432.
 
-### 2. Backend
+### 3. Backend
 
 ```bash
 cd backend
@@ -110,15 +118,14 @@ JWT_SECRET=una_clave_segura
 GOOGLE_MAPS_API_KEY=
 ```
 
-Instala dependencias, corre migraciones y arranca:
+Corre migraciones y arranca:
 
 ```bash
-npm install
 node scripts/migrate.js
 npm run dev      # http://localhost:3000
 ```
 
-### 3. App móvil (Repartidor + Cliente)
+### 4. App móvil (Repartidor + Cliente)
 
 ```bash
 cd app-movil
@@ -133,12 +140,11 @@ npx expo start
 
 Escanea el QR con Expo Go. Más detalles en [`app-movil/README.md`](app-movil/README.md).
 
-### 4. Panel de administración (web)
+### 5. Panel de administración (web)
 
 ```bash
 cd frontend-web
-npm install
-npm run dev      # http://localhost:4000
+pnpm dev      # http://localhost:4000
 ```
 
 Corre en el **puerto 4000** para no chocar con el backend (3000). La URL del backend se configura en `frontend-web/.env.local` (`NEXT_PUBLIC_API_URL`).
@@ -150,6 +156,23 @@ curl -X POST http://localhost:3000/api/auth/registro \
   -H "Content-Type: application/json" \
   -d '{"nombre":"Admin","email":"admin@logitrack.cl","password":"123456","rol":"admin"}'
 ```
+
+---
+
+## Arranque rápido (un solo comando)
+
+Para levantar **base de datos + backend + frontend** juntos desde la raíz del repositorio:
+
+```bash
+npm run dev
+```
+
+Este comando (definido en el `package.json` raíz) levanta automáticamente:
+1. La base de datos PostgreSQL vía Docker Compose (hook `predev`)
+2. El backend (`http://localhost:3000`)
+3. El panel web (puerto Next.js)
+
+Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `frontend` en magenta). La app móvil se levanta aparte con Expo (paso 4).
 
 ---
 

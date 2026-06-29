@@ -1,0 +1,12 @@
+{
+  "name": "logitrack",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "predev": "docker compose up -d",
+    "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"cyan,magenta\" \"npm run dev --prefix backend\" \"pnpm --dir frontend-web dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

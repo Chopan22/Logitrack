@@ -12,5 +12,6 @@ router.get('/',                ctrl.listar);
 router.post('/',               ctrl.crear);
 router.patch('/:id',           ctrl.actualizar);
 router.patch('/:id/asignar',   ctrl.asignar);
+router.patch('/:id/confirmar-entrega', ctrl.confirmarEntrega);
 
 module.exports = router;

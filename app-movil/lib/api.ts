@@ -100,6 +100,11 @@ export const api = {
       body: JSON.stringify({ ruta_id }),
     }),
 
+  confirmarEntrega: (id: number) =>
+    request<Pedido>(`/api/pedidos/${id}/confirmar-entrega`, {
+      method: 'PATCH',
+    }),
+
   // Publico (sin login): seguimiento del pedido por el cliente final.
   trackingPedido: (id: number) =>
     request<Tracking>(`/api/pedidos/${id}/tracking`),

@@ -112,6 +112,26 @@ const asignar = async (req, res) => {
     res.json(result.rows[0]);
 };
 
+// Marca un pedido como entregado. Cierra el ciclo: en_camino -> entregado.
+const confirmarEntrega = async (req, res) => {
+    const { id } = req.params;
+
+    const result = await db.query(
+        `UPDATE pedidos
+         SET estado = 'entregado'
+         WHERE id = $1 AND estado = 'en_camino'
+         RETURNING *,
+                   ST_Y(coordenadas_destino) AS lat,
+                   ST_X(coordenadas_destino) AS lng`,
+        [id]
+    );
+
+    if (result.rows.length === 0) {
+        return res.status(409).json({ error: 'Pedido no encontrado o no está en camino' });
+    }
+    res.json(result.rows[0]);
+};
+
 // Endpoint PUBLICO para que el cliente final siga su pedido (sin login).
 // Devuelve solo informacion segura del pedido y la ultima ubicacion del repartidor.
 const tracking = async (req, res) => {
@@ -152,4 +172,4 @@ const tracking = async (req, res) => {
     res.json({ pedido, ubicacion });
 };
 
-module.exports = { listar, crear, actualizar, asignar, tracking };
+module.exports = { listar, crear, actualizar, asignar, confirmarEntrega, tracking };

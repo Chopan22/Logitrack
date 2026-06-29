@@ -95,7 +95,9 @@ cd backend && npm install && cd ..
 
 ### 2. Base de datos
 
-> El contenedor expone PostgreSQL en el **puerto 5433** del host (`5433:5432`) para no chocar con un PostgreSQL nativo que use el 5432.
+> **Asegúrate de tener Docker Desktop abierto y corriendo** antes de levantar el stack: el script `predev` arranca el contenedor automáticamente, pero necesita el daemon de Docker activo.
+
+> El contenedor expone PostgreSQL en el **puerto 5433** del host (`5433:5432`) para no chocar con un PostgreSQL nativo que use el 5432. El `.env.example` ya viene con `DB_PORT=5433`.
 
 ### 3. Backend
 

@@ -109,4 +109,6 @@ export const api = {
     request<Pedido>(`/api/pedidos/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   asignarPedido: (id: number, ruta_id: number) =>
     request<Pedido>(`/api/pedidos/${id}/asignar`, { method: 'PATCH', body: JSON.stringify({ ruta_id }) }),
+  confirmarEntrega: (id: number) =>
+    request<Pedido>(`/api/pedidos/${id}/confirmar-entrega`, { method: 'PATCH' }),
 };

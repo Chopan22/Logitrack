@@ -185,7 +185,9 @@ Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `fro
 | POST | `/api/auth/registro` | `{ nombre, email, password, rol? }` | Crear usuario |
 | POST | `/api/auth/login` | `{ email, password }` | Devuelve `{ token, usuario }` |
 
-### Vehículos
+> **Autenticación:** todos los endpoints de Vehículos, Conductores, Rutas y Pedidos requieren JWT (`Authorization: Bearer <token>`). La única excepción pública es el tracking del cliente (`GET /api/pedidos/:id/tracking`).
+
+### Vehículos (requieren JWT)
 
 | Método | Endpoint | Body |
 |--------|----------|------|
@@ -193,7 +195,7 @@ Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `fro
 | POST | `/api/vehiculos` | `{ patente, alias?, tipo? }` |
 | PATCH | `/api/vehiculos/:id` | `{ alias?, tipo?, activo? }` |
 
-### Conductores
+### Conductores (requieren JWT)
 
 | Método | Endpoint | Body |
 |--------|----------|------|
@@ -201,7 +203,7 @@ Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `fro
 | POST | `/api/conductores` | `{ nombre, telefono? }` |
 | PATCH | `/api/conductores/:id` | `{ nombre?, telefono?, activo? }` |
 
-### Rutas
+### Rutas (requieren JWT)
 
 | Método | Endpoint | Body |
 |--------|----------|------|
@@ -217,6 +219,7 @@ Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `fro
 | POST | `/api/pedidos` | `{ direccion_destino, descripcion?, cliente_nombre?, cliente_telefono?, lat?, lng? }`. Si no se envían `lat`/`lng`, se **geocodifica** la dirección automáticamente. |
 | PATCH | `/api/pedidos/:id` | `{ estado? }` |
 | PATCH | `/api/pedidos/:id/asignar` | `{ ruta_id }` → estado `en_camino` |
+| PATCH | `/api/pedidos/:id/confirmar-entrega` | Cierra el ciclo: `en_camino` → `entregado`. `409` si el pedido no está en camino. |
 | GET | `/api/pedidos/:id/tracking` | **Público** (sin login). Estado del pedido + última ubicación del repartidor. Usado por la vista del cliente. |
 
 ---
@@ -247,13 +250,13 @@ Al crear un pedido sin coordenadas, el backend convierte la dirección en `lat`/
 
 ## Estado del proyecto
 
-**Implementado:** las tres vistas (repartidor, cliente, admin), tiempo real con WebSockets, datos geográficos con PostGIS, geocodificación de direcciones, ruta por calles (OSRM) con distancia/ETA, y mapa general en vivo.
+**Implementado:** las tres vistas (repartidor, cliente, admin), tiempo real con WebSockets, datos geográficos con PostGIS, geocodificación de direcciones, ruta por calles (OSRM) con distancia/ETA, mapa general en vivo, autenticación JWT en todos los endpoints de gestión, y confirmación de entrega de pedidos (`en_camino` → `entregado`).
 
 **Pendiente (trabajo futuro):**
 - Optimización de rutas multi-parada (VRP) y persistencia del `Optimized_Path`.
 - Geofencing: notificaciones automáticas por proximidad al destino.
 - Sincronización offline del repartidor.
-- Proteger con autenticación los endpoints de vehículos/conductores/rutas (hoy solo `pedidos` exige JWT).
+- Validación de inputs, paginación en listados y manejo de errores global.
 
 ---
 

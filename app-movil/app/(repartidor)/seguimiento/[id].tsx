@@ -159,6 +159,19 @@ export default function SeguimientoScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destinoActivo?.lat, destinoActivo?.lng, recalcularRuta]);
 
+  useEffect(() => {
+    const socket = getSocket();
+    const handleArrival = (data: any) => {
+      console.log('📦 Pedido llegó:', data.pedidoId);
+      cargarPedidos(); // refresh to update estado and UI
+    };
+    socket.on('conductor_llego_pedido', handleArrival);
+    return () => {
+      socket.off('conductor_llego_pedido', handleArrival);
+    };
+  }, [cargarPedidos]);
+
+
   async function iniciarRastreo() {
     setError(null);
     const { status } = await Location.requestForegroundPermissionsAsync();

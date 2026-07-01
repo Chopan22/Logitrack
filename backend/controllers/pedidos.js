@@ -172,4 +172,60 @@ const tracking = async (req, res) => {
     res.json({ pedido, ubicacion });
 };
 
-module.exports = { listar, crear, actualizar, asignar, confirmarEntrega, tracking };
+const registrarLlegada = async (req, res) => {
+  const { id: pedidoId } = req.params;
+  const { lat, lng, timestamp } = req.body;
+
+  if (lat == null || lng == null) {
+    return res.status(400).json({ error: 'lat y lng son requeridos' });
+  }
+
+  try {
+    const orderResult = await db.query(
+      `SELECT p.ruta_id, p.estado, r.conductor_id
+       FROM pedidos p
+       JOIN rutas r ON p.ruta_id = r.id
+       WHERE p.id = $1`,
+      [pedidoId]
+    );
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+    const { ruta_id, conductor_id, estado } = orderResult.rows[0];
+
+    if (estado === 'llegada' || estado === 'entregado') {
+      return res.status(200).json({ success: true, message: 'Ya registrado' });
+    }
+
+    await db.query(
+      `INSERT INTO eventos_geocerca (pedido_id, ruta_id, conductor_id, lat, lng, ocurrido_en)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [pedidoId, ruta_id, conductor_id, lat, lng, new Date(timestamp || Date.now())]
+    );
+
+    await db.query(
+      `UPDATE pedidos SET estado = 'llegada' WHERE id = $1`,
+      [pedidoId]
+    );
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to('admin-room').emit('conductor_llego_pedido', {
+        pedidoId,
+        rutaId: ruta_id,
+        conductorId: conductor_id,
+        lat,
+        lng,
+        timestamp: timestamp || new Date().toISOString(),
+        estado: 'llegada'
+      });
+    }
+
+    res.status(200).json({ success: true, message: 'Llegada registrada' });
+  } catch (error) {
+    console.error('Error en registrarLlegada:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+module.exports = { listar, crear, actualizar, asignar, confirmarEntrega, tracking, registrarLlegada };

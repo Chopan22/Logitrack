@@ -129,6 +129,8 @@ export default function SeguimientoScreen() {
     return () => {
       watchRef.current?.remove();
       watchRef.current = null;
+
+      stopAllGeofences().catch(console.warn);
     };
   }, []);
 
@@ -162,7 +164,7 @@ export default function SeguimientoScreen() {
   useEffect(() => {
     const socket = getSocket();
     const handleArrival = (data: any) => {
-      console.log('📦 Pedido llegó:', data.pedidoId);
+      console.log('Pedido llegó:', data.pedidoId);
       cargarPedidos(); // refresh to update estado and UI
     };
     socket.on('conductor_llego_pedido', handleArrival);

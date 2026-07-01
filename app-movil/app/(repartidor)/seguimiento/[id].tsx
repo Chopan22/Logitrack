@@ -29,7 +29,7 @@ import {
   startGeofencesForOrders, 
   stopAllGeofences, 
   retryPendingGeofenceEvents 
-} from '@/tasks/geofencing';
+} from '@/lib/geofencing';
 
 export default function SeguimientoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

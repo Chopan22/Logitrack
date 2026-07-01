@@ -24,6 +24,12 @@ import {
 } from '@/lib/routing';
 import { disconnectSocket, enviarUbicacion, getSocket } from '@/lib/socket';
 import type { Pedido } from '@/lib/types';
+import { 
+  GEOFENCE_TASK_NAME, 
+  startGeofencesForOrders, 
+  stopAllGeofences, 
+  retryPendingGeofenceEvents 
+} from '@/tasks/geofencing';
 
 export default function SeguimientoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -78,6 +84,25 @@ export default function SeguimientoScreen() {
       setError(e.message ?? 'Error al cargar pedidos.');
     }
   }, [rutaId]);
+
+  const sincronizarGeofences = useCallback(async (orders: Pedido[]) => {
+      const pendientesGeofence = orders.filter(
+        (p) => p.estado !== 'llegada' && p.estado !== 'entregado' && p.lat != null && p.lng != null
+      );
+
+      if (pendientesGeofence.length === 0) {
+        await stopAllGeofences().catch(console.warn);
+        return;
+      }
+
+      const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
+      if (bgStatus !== 'granted') {
+        console.warn('Background location permission not granted – geofencing may not work in background');
+      }
+
+      await retryPendingGeofenceEvents();
+      await startGeofencesForOrders(pendientesGeofence);
+  }, []);
 
   // Estado de conexion del socket.
   useEffect(() => {

@@ -80,10 +80,12 @@ export default function SeguimientoScreen() {
       ]);
       setPedidos(delaRuta);
       setPendientes(sinAsignar.filter((p) => p.ruta_id == null));
+
+      await sincronizarGeofences(delaRuta);
     } catch (e: any) {
       setError(e.message ?? 'Error al cargar pedidos.');
     }
-  }, [rutaId]);
+  }, [rutaId, sincronizarGeofences]);
 
   const sincronizarGeofences = useCallback(async (orders: Pedido[]) => {
       const pendientesGeofence = orders.filter(

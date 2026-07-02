@@ -65,3 +65,9 @@ export interface PuntoRecorrido {
   lng: number;
   fecha_hora: string;
 }
+
+// Detalle de una ruta con sus pedidos asociados (GET /api/rutas/:id).
+export interface RutaDetalle extends Ruta {
+  conductor_telefono?: string | null;
+  pedidos: Pedido[];
+}

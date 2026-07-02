@@ -107,4 +107,35 @@ const ubicaciones = async (req, res) => {
     res.json(result.rows);
 };
 
-module.exports = { listar, iniciar, cerrar, ubicaciones };
+// Detalle de una ruta con sus pedidos asociados (para la vista expandida del admin).
+const detalle = async (req, res) => {
+    const { id } = req.params;
+
+    const ruta = await db.query(
+        `SELECT r.id, r.estado, r.inicio, r.fin,
+                v.patente, v.alias AS vehiculo_alias,
+                c.nombre AS conductor_nombre, c.telefono AS conductor_telefono
+         FROM rutas r
+         JOIN vehiculos v   ON r.vehiculo_id  = v.id
+         JOIN conductores c ON r.conductor_id = c.id
+         WHERE r.id = $1`,
+        [id]
+    );
+    if (ruta.rows.length === 0) {
+        return res.status(404).json({ error: 'Ruta no encontrada' });
+    }
+
+    const pedidos = await db.query(
+        `SELECT *,
+                ST_Y(coordenadas_destino) AS lat,
+                ST_X(coordenadas_destino) AS lng
+         FROM pedidos
+         WHERE ruta_id = $1
+         ORDER BY creado_en ASC`,
+        [id]
+    );
+
+    res.json({ ...ruta.rows[0], pedidos: pedidos.rows });
+};
+
+module.exports = { listar, iniciar, cerrar, ubicaciones, detalle };

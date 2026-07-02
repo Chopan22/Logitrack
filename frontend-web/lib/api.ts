@@ -5,6 +5,7 @@ import type {
   Pedido,
   PuntoRecorrido,
   Ruta,
+  RutaDetalle,
   Usuario,
   Vehiculo,
 } from './types';
@@ -95,6 +96,7 @@ export const api = {
   cerrarRuta: (id: number) => request<Ruta>(`/api/rutas/${id}/cerrar`, { method: 'PATCH' }),
   listUbicacionesRuta: (id: number) =>
     request<PuntoRecorrido[]>(`/api/rutas/${id}/ubicaciones`),
+  detalleRuta: (id: number) => request<RutaDetalle>(`/api/rutas/${id}`),
 
   // --- Pedidos (requieren JWT) ---
   listPedidos: (params: { estado?: string; ruta_id?: number } = {}) => {

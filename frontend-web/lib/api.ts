@@ -3,6 +3,7 @@ import type {
   Conductor,
   EstadoPedido,
   Pedido,
+  PuntoRecorrido,
   Ruta,
   Usuario,
   Vehiculo,
@@ -92,6 +93,8 @@ export const api = {
   iniciarRuta: (vehiculo_id: number, conductor_id: number) =>
     request<Ruta>('/api/rutas', { method: 'POST', body: JSON.stringify({ vehiculo_id, conductor_id }) }),
   cerrarRuta: (id: number) => request<Ruta>(`/api/rutas/${id}/cerrar`, { method: 'PATCH' }),
+  listUbicacionesRuta: (id: number) =>
+    request<PuntoRecorrido[]>(`/api/rutas/${id}/ubicaciones`),
 
   // --- Pedidos (requieren JWT) ---
   listPedidos: (params: { estado?: string; ruta_id?: number } = {}) => {

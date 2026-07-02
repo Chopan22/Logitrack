@@ -85,4 +85,26 @@ const cerrar = async (req, res) => {
     res.json(result.rows[0]);
 };
 
-module.exports = { listar, iniciar, cerrar };
+// Historial de recorrido: todos los puntos GPS registrados para una ruta,
+// en orden cronologico, listos para dibujar la polilinea en el mapa.
+const ubicaciones = async (req, res) => {
+    const { id } = req.params;
+
+    const ruta = await db.query('SELECT id FROM rutas WHERE id = $1', [id]);
+    if (ruta.rows.length === 0) {
+        return res.status(404).json({ error: 'Ruta no encontrada' });
+    }
+
+    const result = await db.query(
+        `SELECT ST_Y(coordenadas) AS lat,
+                ST_X(coordenadas) AS lng,
+                fecha_hora
+         FROM ubicaciones
+         WHERE ruta_id = $1
+         ORDER BY fecha_hora ASC`,
+        [id]
+    );
+    res.json(result.rows);
+};
+
+module.exports = { listar, iniciar, cerrar, ubicaciones };

@@ -72,6 +72,8 @@ export const api = {
     id: number,
     data: { alias?: string; tipo?: string; activo?: boolean }
   ) => request<Vehiculo>(`/api/vehiculos/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  eliminarVehiculo: (id: number) =>
+    request<{ mensaje: string; vehiculo: Vehiculo }>(`/api/vehiculos/${id}`, { method: 'DELETE' }),
 
   // --- Conductores ---
   listConductores: () => request<Conductor[]>('/api/conductores'),
@@ -81,6 +83,8 @@ export const api = {
     id: number,
     data: { nombre?: string; telefono?: string; activo?: boolean }
   ) => request<Conductor>(`/api/conductores/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  eliminarConductor: (id: number) =>
+    request<{ mensaje: string; conductor: Conductor }>(`/api/conductores/${id}`, { method: 'DELETE' }),
 
   // --- Rutas ---
   listRutas: (estado?: string) =>

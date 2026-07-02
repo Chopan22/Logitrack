@@ -27,6 +27,30 @@ const iniciar = async (req, res) => {
         return res.status(400).json({ error: 'vehiculo_id y conductor_id son requeridos' });
     }
 
+    // Solo se pueden iniciar rutas con vehiculos y conductores vigentes;
+    // los dados de baja quedan disponibles unicamente en el historial.
+    const vehiculo = await db.query(
+        'SELECT activo FROM vehiculos WHERE id = $1',
+        [vehiculo_id]
+    );
+    if (vehiculo.rows.length === 0) {
+        return res.status(404).json({ error: 'Vehículo no encontrado' });
+    }
+    if (!vehiculo.rows[0].activo) {
+        return res.status(409).json({ error: 'No se puede iniciar una ruta con un vehículo dado de baja' });
+    }
+
+    const conductor = await db.query(
+        'SELECT activo FROM conductores WHERE id = $1',
+        [conductor_id]
+    );
+    if (conductor.rows.length === 0) {
+        return res.status(404).json({ error: 'Conductor no encontrado' });
+    }
+    if (!conductor.rows[0].activo) {
+        return res.status(409).json({ error: 'No se puede iniciar una ruta con un conductor dado de baja' });
+    }
+
     const activa = await db.query(
         `SELECT id FROM rutas WHERE vehiculo_id = $1 AND estado = 'en_curso'`,
         [vehiculo_id]

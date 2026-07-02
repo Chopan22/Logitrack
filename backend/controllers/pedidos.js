@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { geocodificar } = require('../services/geocoding');
 
 const listar = async (req, res) => {
     const { estado, ruta_id } = req.query;
@@ -17,7 +18,10 @@ const listar = async (req, res) => {
     const where = condiciones.length > 0 ? `WHERE ${condiciones.join(' AND ')}` : '';
 
     const result = await db.query(
-        `SELECT * FROM pedidos ${where} ORDER BY creado_en DESC`,
+        `SELECT *,
+                ST_Y(coordenadas_destino) AS lat,
+                ST_X(coordenadas_destino) AS lng
+         FROM pedidos ${where} ORDER BY creado_en DESC`,
         params
     );
     res.json(result.rows);
@@ -30,14 +34,27 @@ const crear = async (req, res) => {
         return res.status(400).json({ error: 'direccion_destino es requerida' });
     }
 
-    const coordenadas = lat && lng
-        ? `ST_SetSRID(ST_MakePoint(${parseFloat(lng)}, ${parseFloat(lat)}), 4326)`
+    // Si no llegan coordenadas, se geocodifica la direccion automaticamente.
+    let finalLat = lat;
+    let finalLng = lng;
+    if (finalLat == null || finalLng == null) {
+        const geo = await geocodificar(direccion_destino);
+        if (geo) {
+            finalLat = geo.lat;
+            finalLng = geo.lng;
+        }
+    }
+
+    const coordenadas = finalLat != null && finalLng != null
+        ? `ST_SetSRID(ST_MakePoint(${parseFloat(finalLng)}, ${parseFloat(finalLat)}), 4326)`
         : null;
 
     const result = await db.query(
         `INSERT INTO pedidos (descripcion, direccion_destino, coordenadas_destino, cliente_nombre, cliente_telefono)
          VALUES ($1, $2, ${coordenadas ? coordenadas : 'NULL'}, $3, $4)
-         RETURNING *`,
+         RETURNING *,
+                   ST_Y(coordenadas_destino) AS lat,
+                   ST_X(coordenadas_destino) AS lng`,
         [descripcion, direccion_destino, cliente_nombre, cliente_telefono]
     );
     res.status(201).json(result.rows[0]);
@@ -95,4 +112,64 @@ const asignar = async (req, res) => {
     res.json(result.rows[0]);
 };
 
-module.exports = { listar, crear, actualizar, asignar };
+// Marca un pedido como entregado. Cierra el ciclo: en_camino -> entregado.
+const confirmarEntrega = async (req, res) => {
+    const { id } = req.params;
+
+    const result = await db.query(
+        `UPDATE pedidos
+         SET estado = 'entregado'
+         WHERE id = $1 AND estado = 'en_camino'
+         RETURNING *,
+                   ST_Y(coordenadas_destino) AS lat,
+                   ST_X(coordenadas_destino) AS lng`,
+        [id]
+    );
+
+    if (result.rows.length === 0) {
+        return res.status(409).json({ error: 'Pedido no encontrado o no está en camino' });
+    }
+    res.json(result.rows[0]);
+};
+
+// Endpoint PUBLICO para que el cliente final siga su pedido (sin login).
+// Devuelve solo informacion segura del pedido y la ultima ubicacion del repartidor.
+const tracking = async (req, res) => {
+    const { id } = req.params;
+
+    const pedidoRes = await db.query(
+        `SELECT id, descripcion, direccion_destino, estado, ruta_id,
+                cliente_nombre,
+                ST_Y(coordenadas_destino) AS lat,
+                ST_X(coordenadas_destino) AS lng
+         FROM pedidos
+         WHERE id = $1`,
+        [id]
+    );
+
+    if (pedidoRes.rows.length === 0) {
+        return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+
+    const pedido = pedidoRes.rows[0];
+
+    // Ultima ubicacion conocida del repartidor en esa ruta (si existe).
+    let ubicacion = null;
+    if (pedido.ruta_id) {
+        const ubiRes = await db.query(
+            `SELECT ST_Y(coordenadas) AS lat,
+                    ST_X(coordenadas) AS lng,
+                    fecha_hora
+             FROM ubicaciones
+             WHERE ruta_id = $1
+             ORDER BY fecha_hora DESC
+             LIMIT 1`,
+            [pedido.ruta_id]
+        );
+        if (ubiRes.rows.length > 0) ubicacion = ubiRes.rows[0];
+    }
+
+    res.json({ pedido, ubicacion });
+};
+
+module.exports = { listar, crear, actualizar, asignar, confirmarEntrega, tracking };

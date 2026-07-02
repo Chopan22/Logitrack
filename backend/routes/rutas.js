@@ -8,5 +8,7 @@ router.use(autenticar);
 router.get('/',           ctrl.listar);
 router.post('/',          ctrl.iniciar);
 router.patch('/:id/cerrar', ctrl.cerrar);
+router.get('/:id/ubicaciones', ctrl.ubicaciones);
+router.get('/:id',        ctrl.detalle);
 
 module.exports = router;

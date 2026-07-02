@@ -3,7 +3,9 @@ import type {
   Conductor,
   EstadoPedido,
   Pedido,
+  PuntoRecorrido,
   Ruta,
+  RutaDetalle,
   Usuario,
   Vehiculo,
 } from './types';
@@ -72,6 +74,8 @@ export const api = {
     id: number,
     data: { alias?: string; tipo?: string; activo?: boolean }
   ) => request<Vehiculo>(`/api/vehiculos/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  eliminarVehiculo: (id: number) =>
+    request<{ mensaje: string; vehiculo: Vehiculo }>(`/api/vehiculos/${id}`, { method: 'DELETE' }),
 
   // --- Conductores ---
   listConductores: () => request<Conductor[]>('/api/conductores'),
@@ -81,6 +85,8 @@ export const api = {
     id: number,
     data: { nombre?: string; telefono?: string; activo?: boolean }
   ) => request<Conductor>(`/api/conductores/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  eliminarConductor: (id: number) =>
+    request<{ mensaje: string; conductor: Conductor }>(`/api/conductores/${id}`, { method: 'DELETE' }),
 
   // --- Rutas ---
   listRutas: (estado?: string) =>
@@ -88,6 +94,9 @@ export const api = {
   iniciarRuta: (vehiculo_id: number, conductor_id: number) =>
     request<Ruta>('/api/rutas', { method: 'POST', body: JSON.stringify({ vehiculo_id, conductor_id }) }),
   cerrarRuta: (id: number) => request<Ruta>(`/api/rutas/${id}/cerrar`, { method: 'PATCH' }),
+  listUbicacionesRuta: (id: number) =>
+    request<PuntoRecorrido[]>(`/api/rutas/${id}/ubicaciones`),
+  detalleRuta: (id: number) => request<RutaDetalle>(`/api/rutas/${id}`),
 
   // --- Pedidos (requieren JWT) ---
   listPedidos: (params: { estado?: string; ruta_id?: number } = {}) => {

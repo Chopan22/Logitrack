@@ -58,3 +58,16 @@ export interface UbicacionPayload {
   lat: number;
   lng: number;
 }
+
+// Punto del historial de recorrido de una ruta (GET /api/rutas/:id/ubicaciones).
+export interface PuntoRecorrido {
+  lat: number;
+  lng: number;
+  fecha_hora: string;
+}
+
+// Detalle de una ruta con sus pedidos asociados (GET /api/rutas/:id).
+export interface RutaDetalle extends Ruta {
+  conductor_telefono?: string | null;
+  pedidos: Pedido[];
+}

@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Badge, Button, Card, Field, Select, Spinner } from '@/components/ui';
 import { api } from '@/lib/api';
-import type { Conductor, Ruta, Vehiculo } from '@/lib/types';
+import type { Conductor, Ruta, RutaDetalle, Vehiculo } from '@/lib/types';
 
 export default function RutasPage() {
   const [rutas, setRutas] = useState<Ruta[]>([]);
@@ -15,6 +15,10 @@ export default function RutasPage() {
   const [vehiculoSel, setVehiculoSel] = useState('');
   const [conductorSel, setConductorSel] = useState('');
   const [iniciando, setIniciando] = useState(false);
+
+  // Detalle expandido: pedidos de la ruta seleccionada.
+  const [detalle, setDetalle] = useState<RutaDetalle | null>(null);
+  const [cargandoDetalle, setCargandoDetalle] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
@@ -64,6 +68,22 @@ export default function RutasPage() {
       await cargar();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo cerrar la ruta.');
+    }
+  }
+
+  async function verPedidos(ruta: Ruta) {
+    if (detalle?.id === ruta.id) {
+      setDetalle(null); // segundo clic: colapsar
+      return;
+    }
+    setCargandoDetalle(true);
+    try {
+      setDetalle(await api.detalleRuta(ruta.id));
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo cargar el detalle.');
+    } finally {
+      setCargandoDetalle(false);
     }
   }
 
@@ -127,28 +147,64 @@ export default function RutasPage() {
             </thead>
             <tbody>
               {rutas.map((r) => (
-                <tr key={r.id} className="border-b border-slate-100">
-                  <td className="py-3 pr-3 font-mono text-slate-500">{r.id}</td>
-                  <td className="py-3 pr-3 font-medium">
-                    {r.patente}
-                    {r.vehiculo_alias && (
-                      <span className="text-slate-400"> ({r.vehiculo_alias})</span>
-                    )}
-                  </td>
-                  <td className="py-3 pr-3">{r.conductor_nombre}</td>
-                  <td className="py-3 pr-3 text-slate-500">{fmt(r.inicio)}</td>
-                  <td className="py-3 pr-3 text-slate-500">{fmt(r.fin)}</td>
-                  <td className="py-3 pr-3">
-                    <Badge estado={r.estado} />
-                  </td>
-                  <td className="py-3 pr-3">
-                    {r.estado === 'en_curso' && (
-                      <Button variant="danger" onClick={() => cerrar(r)}>
-                        Cerrar
-                      </Button>
-                    )}
-                  </td>
-                </tr>
+                <Fragment key={r.id}>
+                  <tr className="border-b border-slate-100">
+                    <td className="py-3 pr-3 font-mono text-slate-500">{r.id}</td>
+                    <td className="py-3 pr-3 font-medium">
+                      {r.patente}
+                      {r.vehiculo_alias && (
+                        <span className="text-slate-400"> ({r.vehiculo_alias})</span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-3">{r.conductor_nombre}</td>
+                    <td className="py-3 pr-3 text-slate-500">{fmt(r.inicio)}</td>
+                    <td className="py-3 pr-3 text-slate-500">{fmt(r.fin)}</td>
+                    <td className="py-3 pr-3">
+                      <Badge estado={r.estado} />
+                    </td>
+                    <td className="py-3 pr-3">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          loading={cargandoDetalle && detalle?.id !== r.id}
+                          onClick={() => verPedidos(r)}
+                        >
+                          {detalle?.id === r.id ? 'Ocultar' : 'Pedidos'}
+                        </Button>
+                        {r.estado === 'en_curso' && (
+                          <Button variant="danger" onClick={() => cerrar(r)}>
+                            Cerrar
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                  {detalle?.id === r.id && (
+                    <tr className="border-b border-slate-100 bg-slate-50">
+                      <td colSpan={7} className="px-4 py-3">
+                        {detalle.pedidos.length === 0 ? (
+                          <p className="text-slate-500">Esta ruta no tiene pedidos asignados.</p>
+                        ) : (
+                          <div>
+                            <p className="mb-2 text-xs font-semibold uppercase text-slate-500">
+                              Pedidos de la ruta ({detalle.pedidos.length})
+                            </p>
+                            <ul className="flex flex-col gap-1.5">
+                              {detalle.pedidos.map((p) => (
+                                <li key={p.id} className="flex flex-wrap items-center gap-3">
+                                  <span className="font-mono text-xs text-slate-400">#{p.id}</span>
+                                  <span className="font-medium">{p.direccion_destino}</span>
+                                  <span className="text-slate-500">{p.cliente_nombre ?? '—'}</span>
+                                  <Badge estado={p.estado} />
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>

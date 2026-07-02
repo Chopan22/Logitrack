@@ -31,8 +31,9 @@ export default function AdminHome() {
           pedidosPendientes: pendientes.length,
           pedidosEnCamino: enCamino.length,
           rutasEnCurso: rutas.length,
-          vehiculos: vehiculos.length,
-          conductores: conductores.length,
+          // Solo la flota vigente: los dados de baja no cuentan como disponibles.
+          vehiculos: vehiculos.filter((v) => v.activo).length,
+          conductores: conductores.filter((c) => c.activo).length,
         });
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Error al cargar el resumen.');
@@ -47,8 +48,8 @@ export default function AdminHome() {
     { label: 'Pedidos pendientes', valor: resumen.pedidosPendientes, href: '/admin/pedidos' },
     { label: 'Pedidos en camino', valor: resumen.pedidosEnCamino, href: '/admin/pedidos' },
     { label: 'Rutas en curso', valor: resumen.rutasEnCurso, href: '/admin/rutas' },
-    { label: 'Vehiculos', valor: resumen.vehiculos, href: '/admin/flota' },
-    { label: 'Conductores', valor: resumen.conductores, href: '/admin/flota' },
+    { label: 'Vehiculos activos', valor: resumen.vehiculos, href: '/admin/flota' },
+    { label: 'Conductores activos', valor: resumen.conductores, href: '/admin/flota' },
   ];
 
   return (

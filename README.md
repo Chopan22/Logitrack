@@ -191,26 +191,32 @@ Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `fro
 
 ### Vehículos (requieren JWT)
 
-| Método | Endpoint | Body |
-|--------|----------|------|
+| Método | Endpoint | Body / Notas |
+|--------|----------|--------------|
 | GET | `/api/vehiculos` | — |
-| POST | `/api/vehiculos` | `{ patente, alias?, tipo? }` |
-| PATCH | `/api/vehiculos/:id` | `{ alias?, tipo?, activo? }` |
+| POST | `/api/vehiculos` | `{ patente, alias?, tipo? }`. Valida formato de patente chilena (`AB1234` o `ABCD12`); `409` si ya existe. |
+| PATCH | `/api/vehiculos/:id` | `{ alias?, tipo?, activo? }`. Con `activo: true` se reactiva uno dado de baja. |
+| DELETE | `/api/vehiculos/:id` | **Baja lógica**: lo desactiva sin borrarlo, así el historial de rutas conserva sus datos. `409` si tiene una ruta en curso. |
 
 ### Conductores (requieren JWT)
 
-| Método | Endpoint | Body |
-|--------|----------|------|
+| Método | Endpoint | Body / Notas |
+|--------|----------|--------------|
 | GET | `/api/conductores` | — |
-| POST | `/api/conductores` | `{ nombre, telefono? }` |
-| PATCH | `/api/conductores/:id` | `{ nombre?, telefono?, activo? }` |
+| POST | `/api/conductores` | `{ nombre, telefono? }`. Valida largo del nombre y formato del teléfono. |
+| PATCH | `/api/conductores/:id` | `{ nombre?, telefono?, activo? }`. Con `activo: true` se reactiva uno dado de baja. |
+| DELETE | `/api/conductores/:id` | **Baja lógica**: lo desactiva sin borrarlo. `409` si tiene una ruta en curso. |
+
+> **Baja lógica:** los vehículos y conductores dados de baja no pueden usarse en rutas nuevas (`POST /api/rutas` responde `409`), pero sus rutas y entregas históricas siguen mostrando patente y nombre porque el registro nunca se elimina físicamente.
 
 ### Rutas (requieren JWT)
 
-| Método | Endpoint | Body |
-|--------|----------|------|
+| Método | Endpoint | Body / Notas |
+|--------|----------|--------------|
 | GET | `/api/rutas` | — (acepta `?estado=en_curso`) |
-| POST | `/api/rutas` | `{ vehiculo_id, conductor_id }` |
+| GET | `/api/rutas/:id` | Detalle de la ruta con sus pedidos asociados. |
+| GET | `/api/rutas/:id/ubicaciones` | Historial de puntos GPS de la ruta en orden cronológico (alimenta el recorrido en el mapa). |
+| POST | `/api/rutas` | `{ vehiculo_id, conductor_id }`. `409` si el vehículo ya tiene ruta en curso o si alguno está dado de baja. |
 | PATCH | `/api/rutas/:id/cerrar` | — |
 
 ### Pedidos (requieren JWT, salvo el tracking público)
@@ -252,13 +258,13 @@ Al crear un pedido sin coordenadas, el backend convierte la dirección en `lat`/
 
 ## Estado del proyecto
 
-**Implementado:** las tres vistas (repartidor, cliente, admin), tiempo real con WebSockets, datos geográficos con PostGIS, geocodificación de direcciones, ruta por calles (OSRM) con distancia/ETA, mapa general en vivo, autenticación JWT en todos los endpoints de gestión, y confirmación de entrega de pedidos (`en_camino` → `entregado`).
+**Implementado:** las tres vistas (repartidor, cliente, admin), tiempo real con WebSockets, datos geográficos con PostGIS, geocodificación de direcciones, ruta por calles (OSRM) con distancia/ETA, mapa general en vivo con historial de recorrido por ruta, autenticación JWT en todos los endpoints de gestión, confirmación de entrega de pedidos (`en_camino` → `entregado`), CRUD completo de flota con baja lógica (el historial nunca pierde datos), validación de inputs (patentes, teléfonos, duplicados) y filtros de búsqueda en pedidos.
 
 **Pendiente (trabajo futuro):**
 - Optimización de rutas multi-parada (VRP) y persistencia del `Optimized_Path`.
 - Geofencing: notificaciones automáticas por proximidad al destino.
 - Sincronización offline del repartidor.
-- Validación de inputs, paginación en listados y manejo de errores global.
+- Paginación en listados, manejo de errores global y suite de tests automatizados.
 
 ---
 

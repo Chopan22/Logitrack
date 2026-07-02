@@ -23,9 +23,16 @@ export default function PedidosPage() {
   // Seleccion de ruta por pedido para asignar.
   const [rutaSel, setRutaSel] = useState<Record<number, string>>({});
 
+  // Filtros del listado.
+  const [filtroEstado, setFiltroEstado] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+
   const cargar = useCallback(async () => {
     try {
-      const [p, r] = await Promise.all([api.listPedidos(), api.listRutas('en_curso')]);
+      const [p, r] = await Promise.all([
+        api.listPedidos({ estado: filtroEstado || undefined }),
+        api.listRutas('en_curso'),
+      ]);
       setPedidos(p);
       setRutas(r);
       setError(null);
@@ -34,7 +41,7 @@ export default function PedidosPage() {
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [filtroEstado]);
 
   useEffect(() => {
     cargar();
@@ -87,6 +94,17 @@ export default function PedidosPage() {
     }
   }
 
+  // Busqueda en memoria sobre lo ya filtrado por estado en el backend.
+  const texto = busqueda.trim().toLowerCase();
+  const pedidosFiltrados = texto
+    ? pedidos.filter(
+        (p) =>
+          p.direccion_destino.toLowerCase().includes(texto) ||
+          (p.cliente_nombre ?? '').toLowerCase().includes(texto) ||
+          (p.descripcion ?? '').toLowerCase().includes(texto)
+      )
+    : pedidos;
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold">Pedidos</h1>
@@ -136,11 +154,36 @@ export default function PedidosPage() {
       {error && <p className="font-medium text-red-600">{error}</p>}
 
       <Card className="overflow-x-auto">
-        <h2 className="mb-4 text-lg font-semibold">Listado ({pedidos.length})</h2>
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <h2 className="text-lg font-semibold">Listado ({pedidosFiltrados.length})</h2>
+          <div className="flex flex-wrap items-end gap-3">
+            <Field label="Buscar">
+              <Input
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="Direccion, cliente..."
+                className="w-52"
+              />
+            </Field>
+            <Field label="Estado">
+              <Select
+                value={filtroEstado}
+                onChange={(e) => setFiltroEstado(e.target.value)}
+                className="w-40"
+              >
+                <option value="">Todos</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="en_camino">En camino</option>
+                <option value="entregado">Entregado</option>
+                <option value="cancelado">Cancelado</option>
+              </Select>
+            </Field>
+          </div>
+        </div>
         {cargando ? (
           <Spinner />
-        ) : pedidos.length === 0 ? (
-          <p className="text-slate-500">No hay pedidos.</p>
+        ) : pedidosFiltrados.length === 0 ? (
+          <p className="text-slate-500">No hay pedidos que coincidan con el filtro.</p>
         ) : (
           <table className="w-full min-w-[720px] text-sm">
             <thead>
@@ -154,7 +197,7 @@ export default function PedidosPage() {
               </tr>
             </thead>
             <tbody>
-              {pedidos.map((p) => (
+              {pedidosFiltrados.map((p) => (
                 <tr key={p.id} className="border-b border-slate-100 align-top">
                   <td className="py-3 pr-3 font-mono text-slate-500">{p.id}</td>
                   <td className="py-3 pr-3">

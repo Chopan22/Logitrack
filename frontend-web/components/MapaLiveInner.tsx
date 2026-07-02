@@ -3,10 +3,10 @@
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useEffect, useState } from 'react';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet';
 import { api } from '@/lib/api';
 import { getSocket } from '@/lib/socket';
-import type { Ruta, UbicacionPayload } from '@/lib/types';
+import type { PuntoRecorrido, Ruta, UbicacionPayload } from '@/lib/types';
 
 // Icono simple (punto azul) para evitar problemas con los assets por defecto de Leaflet.
 const icono = L.divIcon({
@@ -17,9 +17,26 @@ const icono = L.divIcon({
   iconAnchor: [9, 9],
 });
 
-export default function MapaLiveInner() {
+// Iconos de inicio (verde) y fin (rojo) del recorrido historico.
+const iconoInicio = L.divIcon({
+  className: '',
+  html:
+    '<div style="background:#16a34a;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,.4)"></div>',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
+const iconoFin = L.divIcon({
+  className: '',
+  html:
+    '<div style="background:#dc2626;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,.4)"></div>',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
+
+export default function MapaLiveInner({ rutaHistorialId }: { rutaHistorialId: number | null }) {
   const [posiciones, setPosiciones] = useState<Record<number, { lat: number; lng: number }>>({});
   const [rutas, setRutas] = useState<Record<number, Ruta>>({});
+  const [recorrido, setRecorrido] = useState<PuntoRecorrido[]>([]);
 
   // Info de las rutas en curso (para etiquetar cada repartidor).
   useEffect(() => {
@@ -47,7 +64,21 @@ export default function MapaLiveInner() {
     };
   }, []);
 
+  // Historial de recorrido de la ruta seleccionada.
+  useEffect(() => {
+    if (rutaHistorialId == null) {
+      setRecorrido([]);
+      return;
+    }
+    api
+      .listUbicacionesRuta(rutaHistorialId)
+      .then(setRecorrido)
+      .catch(() => setRecorrido([]));
+  }, [rutaHistorialId]);
+
   const entradas = Object.entries(posiciones);
+  const trazo = recorrido.map((p) => [p.lat, p.lng] as [number, number]);
+  const fmtHora = (s: string) => new Date(s).toLocaleString('es-CL');
 
   return (
     <MapContainer center={[-33.45, -70.66]} zoom={11} style={{ height: '100%', width: '100%' }}>
@@ -67,6 +98,27 @@ export default function MapaLiveInner() {
           </Marker>
         );
       })}
+      {trazo.length > 1 && (
+        <Polyline positions={trazo} pathOptions={{ color: '#0369a1', weight: 4, opacity: 0.7 }} />
+      )}
+      {trazo.length > 0 && (
+        <Marker position={trazo[0]} icon={iconoInicio}>
+          <Popup>
+            <strong>Inicio del recorrido</strong>
+            <br />
+            {fmtHora(recorrido[0].fecha_hora)}
+          </Popup>
+        </Marker>
+      )}
+      {trazo.length > 1 && (
+        <Marker position={trazo[trazo.length - 1]} icon={iconoFin}>
+          <Popup>
+            <strong>Último punto registrado</strong>
+            <br />
+            {fmtHora(recorrido[recorrido.length - 1].fecha_hora)}
+          </Popup>
+        </Marker>
+      )}
     </MapContainer>
   );
 }

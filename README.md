@@ -104,29 +104,16 @@ docker compose up -d
 
 ```bash
 cd backend
-copy .env.example .env
 ```
 
-Edita `.env` (coincide con `docker-compose.yml`):
-
-```env
-PORT=3000
-DB_USER=logitrack_admin
-DB_PASSWORD=superpassword123
-DB_HOST=127.0.0.1
-DB_PORT=5433
-DB_NAME=logitrack_dev
-JWT_SECRET=una_clave_segura
-# Opcional: geocodificación precisa con Google. Si se deja vacío, usa Nominatim (OSM).
-GOOGLE_MAPS_API_KEY=
-```
+Elimina el `.example` del `.env.example`
 
 Instala dependencias, corre migraciones y arranca:
 
 ```bash
 npm install
 node scripts/migrate.js
-npm run dev      # http://localhost:3000
+npm run dev
 ```
 
 
@@ -135,13 +122,27 @@ npm run dev      # http://localhost:3000
 ```bash
 cd frontend-web
 npm install
-npm run dev      # http://localhost:4000
+npm run dev
 ```
 
 Corre en el **puerto 4000** para no chocar con el backend (3000). La URL del backend se configura en `frontend-web/.env.local` (`NEXT_PUBLIC_API_URL`).
 
 
-Y crea un usuario para entrar al panel:
+Usuarios creados:
+
+Admin
+```
+email: admin@logitrack.cl
+password: 123456
+```
+
+Repartidor
+```
+email: repartidor@logitrack.cl
+password: 123456
+```
+
+En caso de no tenerlos creados:
 
 ```bash
 curl -X POST http://localhost:3000/api/auth/registro -H "Content-Type: application/json" -d "{\"nombre\":\"Admin\",\"email\":\"admin@logitrack.cl\",\"password\":\"123456\",\"rol\":\"admin\"}"

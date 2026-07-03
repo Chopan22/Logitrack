@@ -95,9 +95,17 @@ cd backend && npm install && cd ..
 
 ### 2. Base de datos
 
-> **Asegúrate de tener Docker Desktop abierto y corriendo** antes de levantar el stack: el script `predev` arranca el contenedor automáticamente, pero necesita el daemon de Docker activo.
+> **Asegúrate de tener Docker Desktop abierto y corriendo** antes de continuar.
 
-> El contenedor expone PostgreSQL en el **puerto 5433** del host (`5433:5432`) para no chocar con un PostgreSQL nativo que use el 5432. El `.env.example` ya viene con `DB_PORT=5433`.
+Levanta el contenedor de PostgreSQL/PostGIS:
+
+```bash
+docker compose up -d
+```
+
+> El contenedor expone PostgreSQL en el **puerto 5433** del host (`5433:5432`) para no
+> chocar con un PostgreSQL nativo que use el 5432. El `.env.example` ya viene con `DB_PORT=5433`.
+> El comando es idempotente: si el contenedor ya existe o ya está corriendo, no hace nada.
 
 ### 3. Backend
 
@@ -163,19 +171,37 @@ curl -X POST http://localhost:3000/api/auth/registro \
 
 ## Arranque rápido (un solo comando)
 
-Para levantar **base de datos + backend + frontend** juntos desde la raíz del repositorio:
+> **Alternativa a los pasos 3 y 5**: usa esta modalidad **o** la manual, no ambas a la vez
+> (ocuparían los mismos puertos 3000 y 4000).
+
+Requiere haber hecho **una única vez** la instalación inicial:
+
+```bash
+npm install                                          # dependencias de la raíz
+cd backend && npm install && cp .env.example .env && cd ..
+cd frontend-web && pnpm install && cd ..
+```
+
+Luego, con Docker Desktop abierto, desde la raíz del repositorio:
 
 ```bash
 npm run dev
 ```
 
-Este comando (definido en el `package.json` raíz) levanta automáticamente:
+Este comando levanta automáticamente:
 1. La base de datos PostgreSQL vía Docker Compose (hook `predev`)
 2. El backend (`http://localhost:3000`)
-3. El panel web (puerto Next.js)
+3. El panel web (`http://localhost:4000`)
 
-Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `frontend` en magenta). La app móvil se levanta aparte con Expo (paso 4).
+La **primera vez**, con el stack ya corriendo, aplica las migraciones en otra terminal
+y crea un usuario admin (curl de la sección anterior):
 
+```bash
+cd backend && node scripts/migrate.js
+```
+
+Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `frontend`
+en magenta). La app móvil se levanta aparte con Expo (paso 4).
 ---
 
 ## API REST

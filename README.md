@@ -142,13 +142,12 @@ email: repartidor@logitrack.cl
 password: 123456
 ```
 
-En caso de no tenerlos creados:
+### En caso de no tenerlos creados:
 
 ```bash
 curl -X POST http://localhost:3000/api/auth/registro -H "Content-Type: application/json" -d "{\"nombre\":\"Admin\",\"email\":\"admin@logitrack.cl\",\"password\":\"123456\",\"rol\":\"admin\"}"
 
 ```
-### Crear repartidor general
 
 ```bash
 curl -X POST http://localhost:3000/api/auth/registro -H "Content-Type: application/json" -d "{\"nombre\":\"Repartidor\",\"email\":\"repartidor@logitrack.cl\",\"password\":\"123456\",\"rol\":\"repartidor\"}"

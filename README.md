@@ -92,7 +92,7 @@ git clone https://github.com/Chopan22/Logitrack.git
 cd Logitrack
 npm install
 cd backend && npm install && cd ..
-cd frontend-web && pnpm install && cd ..
+cd frontend-web && npm install && cd ..
 ```
 
 > Elimina el `.example` del `.env.example`.

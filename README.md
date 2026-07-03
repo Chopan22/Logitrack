@@ -83,6 +83,13 @@ usuarios (auth)        vehiculos     conductores
 
 ## Levantar el entorno local
 
+> Clonar repositorio.
+
+```bash
+git clone https://github.com/Chopan22/Logitrack.git
+cd Logitrack
+```
+
 > **Requisito:** tener **Docker Desktop abierto y corriendo** antes de empezar.
 
 ### 1. Base de datos

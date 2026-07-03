@@ -83,83 +83,46 @@ usuarios (auth)        vehiculos     conductores
 
 ## Levantar el entorno local
 
-### 1. Clonar e instalar dependencias
+> **Requisito:** tener **Docker Desktop abierto y corriendo** antes de empezar.
+
+### 1. Clonar e instalar (una única vez por máquina)
 
 ```bash
 git clone https://github.com/Chopan22/Logitrack.git
 cd Logitrack
 npm install
+cd backend && npm install && cp .env.example .env && cd ..
 cd frontend-web && pnpm install && cd ..
-cd backend && npm install && cd ..
 ```
 
-### 2. Base de datos
+> El `.env` del backend se crea copiando `.env.example`, que ya viene listo:
+> puerto **5433** para la base de datos (para no chocar con un PostgreSQL nativo)
+> y geocodificación con Google (si la key no está disponible, usa Nominatim/OSM automáticamente).
 
-> **Asegúrate de tener Docker Desktop abierto y corriendo** antes de continuar.
+### 2. Arrancar todo (un solo comando)
 
-Levanta el contenedor de PostgreSQL/PostGIS:
+Desde la raíz del repositorio:
 
 ```bash
-docker compose up -d
+npm run dev
 ```
 
-> El contenedor expone PostgreSQL en el **puerto 5433** del host (`5433:5432`) para no
-> chocar con un PostgreSQL nativo que use el 5432. El `.env.example` ya viene con `DB_PORT=5433`.
-> El comando es idempotente: si el contenedor ya existe o ya está corriendo, no hace nada.
+Este comando levanta automáticamente:
+1. La base de datos PostgreSQL/PostGIS vía Docker Compose (hook `predev`)
+2. El backend (`http://localhost:3000`)
+3. El panel web (`http://localhost:4000`)
 
-### 3. Backend
+Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `frontend` en magenta).
+
+### 3. Primera vez: migraciones y usuario admin
+
+Con el stack corriendo, en **otra terminal**:
 
 ```bash
-cd backend
+cd backend && node scripts/migrate.js
 ```
 
-Edita `.env` (coincide con `docker-compose.yml`):
-
-```env
-PORT=3000
-DB_USER=logitrack_admin
-DB_PASSWORD=superpassword123
-DB_HOST=127.0.0.1
-DB_PORT=5433
-DB_NAME=logitrack_dev
-JWT_SECRET=una_clave_segura
-# Opcional: geocodificación precisa con Google. Si se deja vacío, usa Nominatim (OSM).
-GOOGLE_MAPS_API_KEY=
-```
-
-Corre migraciones y arranca:
-
-```bash
-node scripts/migrate.js
-npm run dev      # http://localhost:3000
-```
-
-### 4. App móvil (Repartidor + Cliente)
-
-```bash
-cd app-movil
-npm install
-```
-
-Configura la IP de tu PC en `app.json` → `expo.extra.apiUrl` (Expo Go en celular **no** usa `localhost`, sino la IP de tu red local, ej. `http://192.168.1.100:3000`).  
-Luego:
-
-```bash
-npx expo start
-```
-
-Escanea el QR con Expo Go. Más detalles en [`app-movil/README.md`](app-movil/README.md).
-
-### 5. Panel de administración (web)
-
-```bash
-cd frontend-web
-pnpm dev      # http://localhost:4000
-```
-
-Corre en el **puerto 4000** para no chocar con el backend (3000). La URL del backend se configura en `frontend-web/.env.local` (`NEXT_PUBLIC_API_URL`).
-
-### Crear un usuario admin de prueba
+Y crea un usuario para entrar al panel:
 
 ```bash
 curl -X POST http://localhost:3000/api/auth/registro -H "Content-Type: application/json" -d "{\"nombre\":\"Admin\",\"email\":\"admin@logitrack.cl\",\"password\":\"123456\",\"rol\":\"admin\"}"
@@ -172,42 +135,21 @@ curl -X POST http://localhost:3000/api/auth/registro -H "Content-Type: applicati
 
 ```
 
-
----
-
-## Arranque rápido (un solo comando)
-
-> **Alternativa a los pasos 3 y 5**: usa esta modalidad **o** la manual, no ambas a la vez
-> (ocuparían los mismos puertos 3000 y 4000).
-
-Requiere haber hecho **una única vez** la instalación inicial:
+### 4. App móvil (Repartidor + Cliente)
 
 ```bash
-npm install                                          # dependencias de la raíz
-cd backend && npm install && cp .env.example .env && cd ..
-cd frontend-web && pnpm install && cd ..
+cd app-movil
+npm install
 ```
 
-Luego, con Docker Desktop abierto, desde la raíz del repositorio:
+Configura la IP de tu PC en `app.json` → `expo.extra.apiUrl` (Expo Go en celular **no** usa `localhost`, sino la IP de tu red local, ej. `http://192.168.1.100:3000`). Luego:
 
 ```bash
-npm run dev
+npx expo start
 ```
 
-Este comando levanta automáticamente:
-1. La base de datos PostgreSQL vía Docker Compose (hook `predev`)
-2. El backend (`http://localhost:3000`)
-3. El panel web (`http://localhost:4000`)
+Escanea el QR con Expo Go. Más detalles en [`app-movil/README.md`](app-movil/README.md).
 
-La **primera vez**, con el stack ya corriendo, aplica las migraciones en otra terminal
-y crea un usuario admin (curl de la sección anterior):
-
-```bash
-cd backend && node scripts/migrate.js
-```
-
-Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `frontend`
-en magenta). La app móvil se levanta aparte con Expo (paso 4).
 ---
 
 ## API REST

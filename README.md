@@ -85,40 +85,54 @@ usuarios (auth)        vehiculos     conductores
 
 > **Requisito:** tener **Docker Desktop abierto y corriendo** antes de empezar.
 
-### 1. Clonar e instalar (una única vez por máquina)
+### 1. Base de datos
 
 ```bash
-git clone https://github.com/Chopan22/Logitrack.git
-cd Logitrack
+docker compose up -d
+```
+
+> El contenedor expone PostgreSQL en el **puerto 5433** del host (`5433:5432`) para no chocar con un PostgreSQL nativo que use el 5432.
+
+### 2. Backend
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Edita `.env` (coincide con `docker-compose.yml`):
+
+```env
+PORT=3000
+DB_USER=logitrack_admin
+DB_PASSWORD=superpassword123
+DB_HOST=127.0.0.1
+DB_PORT=5433
+DB_NAME=logitrack_dev
+JWT_SECRET=una_clave_segura
+# Opcional: geocodificación precisa con Google. Si se deja vacío, usa Nominatim (OSM).
+GOOGLE_MAPS_API_KEY=
+```
+
+Instala dependencias, corre migraciones y arranca:
+
+```bash
 npm install
-cd backend && npm install && cd ..
-cd frontend-web && npm install && cd ..
+node scripts/migrate.js
+npm run dev      # http://localhost:3000
 ```
 
-> Elimina el `.example` del `.env.example`.
 
-### 2. Arrancar todo (un solo comando)
-
-Desde la raíz del repositorio:
+### 3. Panel de administración (web)
 
 ```bash
-npm run dev
+cd frontend-web
+npm install
+npm run dev      # http://localhost:4000
 ```
 
-Este comando levanta automáticamente:
-1. La base de datos PostgreSQL/PostGIS vía Docker Compose (hook `predev`)
-2. El backend (`http://localhost:3000`)
-3. El panel web (`http://localhost:4000`)
+Corre en el **puerto 4000** para no chocar con el backend (3000). La URL del backend se configura en `frontend-web/.env.local` (`NEXT_PUBLIC_API_URL`).
 
-Los logs de cada servicio aparecen con prefijo de color (`backend` en cyan, `frontend` en magenta).
-
-### 3. Primera vez: migraciones y usuario admin
-
-Con el stack corriendo, en **otra terminal**:
-
-```bash
-cd backend && node scripts/migrate.js
-```
 
 Y crea un usuario para entrar al panel:
 

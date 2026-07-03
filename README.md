@@ -142,7 +142,8 @@ cd app-movil
 npm install
 ```
 
-Configura la IP de tu PC en `app.json` → `expo.extra.apiUrl` (Expo Go en celular **no** usa `localhost`, sino la IP de tu red local, ej. `http://192.168.1.100:3000`). Luego:
+Configura la IP de tu PC en `app.json` → `expo.extra.apiUrl` (Expo Go en celular **no** usa `localhost`, sino la IP de tu red local, ej. `http://192.168.1.100:3000`).  
+Luego:
 
 ```bash
 npx expo start

@@ -111,7 +111,6 @@ docker compose up -d
 
 ```bash
 cd backend
-cp .env.example .env
 ```
 
 Edita `.env` (coincide con `docker-compose.yml`):

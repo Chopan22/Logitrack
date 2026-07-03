@@ -163,9 +163,8 @@ Corre en el **puerto 4000** para no chocar con el backend (3000). La URL del bac
 ### Crear un usuario admin de prueba
 
 ```bash
-curl -X POST http://localhost:3000/api/auth/registro \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"Admin","email":"admin@logitrack.cl","password":"123456","rol":"admin"}'
+curl -X POST http://localhost:3000/api/auth/registro -H "Content-Type: application/json" -d "{\"nombre\":\"Admin\",\"email\":\"admin@logitrack.cl\",\"password\":\"123456\",\"rol\":\"admin\"}"
+
 ```
 
 ---

@@ -91,7 +91,7 @@ usuarios (auth)        vehiculos     conductores
 git clone https://github.com/Chopan22/Logitrack.git
 cd Logitrack
 npm install
-cd backend && npm install && cp .env.example .env && cd ..
+cd backend && npm install && cd ..
 cd frontend-web && pnpm install && cd ..
 ```
 

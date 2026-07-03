@@ -6,7 +6,7 @@ import { Button, Card, Field, Input } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 
 export default function LoginPage() {
-  const { usuario, cargando, login } = useAuth();
+  const { usuario, cargando, login, logout } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
@@ -15,7 +15,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!cargando && usuario) router.replace('/admin');
+    // Solo los administradores pueden entrar al panel.
+    if (!cargando && usuario?.rol === 'admin') router.replace('/admin');
   }, [cargando, usuario, router]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -27,7 +28,13 @@ export default function LoginPage() {
     setError(null);
     setEnviando(true);
     try {
-      await login(email.trim().toLowerCase(), password);
+      const u = await login(email.trim().toLowerCase(), password);
+      if (u.rol !== 'admin') {
+        // El panel web es solo para administradores; los repartidores usan la app movil.
+        logout();
+        setError('Esta cuenta no tiene acceso al panel de administracion.');
+        return;
+      }
       router.replace('/admin');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar sesion.');

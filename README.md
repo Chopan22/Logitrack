@@ -95,9 +95,7 @@ cd backend && npm install && cd ..
 cd frontend-web && pnpm install && cd ..
 ```
 
-> El `.env` del backend se crea copiando `.env.example`, que ya viene listo:
-> puerto **5433** para la base de datos (para no chocar con un PostgreSQL nativo)
-> y geocodificación con Google (si la key no está disponible, usa Nominatim/OSM automáticamente).
+> Elimina el `.example` del `.env.example`.
 
 ### 2. Arrancar todo (un solo comando)
 

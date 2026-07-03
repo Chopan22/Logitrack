@@ -20,10 +20,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!cargando && !usuario) router.replace('/');
+    // Requiere sesion Y rol admin: un repartidor no puede entrar al panel.
+    if (!cargando && (!usuario || usuario.rol !== 'admin')) router.replace('/');
   }, [cargando, usuario, router]);
 
-  if (cargando || !usuario) {
+  if (cargando || !usuario || usuario.rol !== 'admin') {
     return (
       <div className="flex flex-1 items-center justify-center">
         <Spinner />
